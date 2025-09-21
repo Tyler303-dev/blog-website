@@ -1,21 +1,5 @@
 const API_URL = 'http://localhost:3000';
 
-// Helper to show posts
-function loadPosts() {
-    fetch(`${API_URL}/posts`)
-        .then(res => res.json())
-        .then(posts => {
-            const postsList = document.getElementById('posts-list');
-            postsList.innerHTML = '';
-            posts.forEach(post => {
-                const div = document.createElement('div');
-                div.className = 'post';
-                div.innerHTML = `<div class="post-title">${post.title}</div><div class="post-content">${post.content}</div><div>by ${post.author}</div>`;
-                postsList.appendChild(div);
-            });
-        });
-}
-
 // Register
 const registerForm = document.getElementById('register-form');
 registerForm.addEventListener('submit', function(e) {
@@ -56,27 +40,11 @@ loginForm.addEventListener('submit', function(e) {
     });
 });
 
-// Create Post
-const createPostForm = document.getElementById('create-post-form');
-createPostForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    if (!currentUser) {
-        alert('You must be logged in to create a post.');
-        return;
-    }
-    const title = document.getElementById('post-title').value;
-    const content = document.getElementById('post-content').value;
-    fetch(`${API_URL}/posts`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({title, content, author: currentUser})
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        loadPosts();
-    });
-});
-
-// Initial load
-loadPosts();
+// WebSocket for live notifications
+const ws = new WebSocket('ws://localhost:3000');
+ws.onmessage = function(event) {
+    const notificationList = document.getElementById('notification-list');
+    const div = document.createElement('div');
+    div.textContent = event.data;
+    notificationList.appendChild(div);
+};

@@ -12,7 +12,6 @@ app.use(bodyParser.json());
 const db = new sqlite3.Database('./blog.db');
 db.serialize(() => {
     db.run('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)');
-    db.run('CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, title TEXT, content TEXT, author TEXT)');
 });
 
 // Register
@@ -39,23 +38,26 @@ app.post('/login', (req, res) => {
 });
 
 // Get posts
-app.get('/posts', (req, res) => {
-    db.all('SELECT * FROM posts ORDER BY id DESC', [], (err, rows) => {
-        res.json(rows);
-    });
+// ...existing code...
+
+
+
+// WebSocket server for live notifications
+const http = require('http');
+const WebSocket = require('ws');
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+let notificationCount = 1;
+wss.on('connection', ws => {
+    ws.send('Welcome to 5 Star Space Learning District!');
+    // Example: send a notification every 10 seconds
+    const interval = setInterval(() => {
+        ws.send(`Live Notification #${notificationCount++}`);
+    }, 10000);
+    ws.on('close', () => clearInterval(interval));
 });
 
-// Create post
-app.post('/posts', (req, res) => {
-    const { title, content, author } = req.body;
-    db.run('INSERT INTO posts (title, content, author) VALUES (?, ?, ?)', [title, content, author], function(err) {
-        if (err) {
-            return res.json({ success: false, message: 'Error creating post.' });
-        }
-        res.json({ success: true, message: 'Post created!' });
-    });
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+server.listen(PORT, () => {
+    console.log(`Server and WebSocket running on http://localhost:${PORT}`);
 });
